@@ -13,11 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Checkout del repositorio 
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Paso 1.5: carga secretos en el application.properties
       - name: Update db url
         run: |
          db_url_escaped=$(printf '%s\n' "${{ secrets.DB_URL }}" | sed 's/[&/\]/\\&/g')
@@ -34,24 +32,20 @@ jobs:
          sed -i "s|<db_password>|$db_password_escaped|" src/main/resources/application.properties
         shell: bash
 
-      # Paso 2: Autenticar en DockerHub 
       - name: Log in to DockerHub
         uses: docker/login-action@v2 
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Paso 3: Construir la imagen de Docker
       - name: Build Docker Image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest .
 
-      # Paso 4: Hacer push de la imagen a DockerHub
       - name: Push Docker Image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
-          
-     # Paso 5: Configurar credenciales de AWS para SSH, incluyendo AWS_SESSION_TOKEN
+
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
